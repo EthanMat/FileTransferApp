@@ -8,7 +8,7 @@ window = tk.Tk()
 window.geometry("800x500")
 
 window.minsize(300,100)
-
+ 
 #window customizions
 window.iconbitmap("Icon.ico")
 window.title("Wireless File Transfer")
@@ -21,6 +21,9 @@ logo.pack()
 
 welcome_label = ttk.Label(window, text="Welcome", font=font.BOLD)
 welcome_label.pack()
+
+username = ttk.Entry(window)
+username.pack()
 
 #run main loop
 window.mainloop()

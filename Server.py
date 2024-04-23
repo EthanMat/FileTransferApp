@@ -2,21 +2,26 @@ import socket
 from _thread import * # type: ignore
 import sys
 
-server = "192.168.0.95"
-port = 5555
-
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 connected_users = []
 
-try:
-    s.bind((server, port))
+def start_server(server):
+    #server = "192.168.0.95"
+    #server = "10.81.9.86"
+    port = 5555
 
-except socket.error as e:
-    str(e)
+    try:
+        s.bind((server, port))
 
-s.listen()
-print("Server started... \nWaiting for connection...")
+    except socket.error as e:
+        str(e)
+    try:
+        s.listen()
+        print("Server started... \nWaiting for connection...")
+    except:
+        print("Can't start server. Check server address.")
+        exit()
 
 def threaded_client(conn):
     #conn.send(str.encode("Connected"))
@@ -37,6 +42,7 @@ def threaded_client(conn):
                 if reply.find("@") > -1:
                     connected_users.remove(reply.lstrip("@"))
                     print(reply.lstrip("@") + " disconnected")
+
                 print("Received: " + reply)
                 print("Sending : " + reply)
 
@@ -45,8 +51,17 @@ def threaded_client(conn):
         except:
             break
 
-while True:
-    conn, addr = s.accept()
-    print("Connected to:", addr)
+def get_connected_users(self):
+    return connected_users
 
-    start_new_thread(threaded_client, (conn,))
+def run():
+    while True:
+        conn, addr = s.accept()
+        print("Connected to:", addr)
+
+        start_new_thread(threaded_client, (conn,))
+
+if __name__ == "__main__":
+    start_server("192.168.0.95")
+    run()
+    
