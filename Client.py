@@ -1,7 +1,5 @@
-import tkinter as tk
 import customtkinter as ctk 
 import tkinter.messagebox as tkmb 
-from tkinter import ttk, font
 from PIL import Image
 from File import File
 from Network import Network
@@ -23,12 +21,24 @@ window.iconbitmap("Icon.ico")
 window.title("Wireless File Transfer")
 
 def login():
-    print(username.get())
-    print(server.get())
-    n = Network(username.get(), server.get())
-    print(n.send("Hello"))
-    print(n.send("Working"))
-    n.disconnect()
+    try:
+        global n 
+        n = Network(username.get(), server.get())
+        print(n.send("Hello"))
+        print(n.send("Working"))
+        n.disconnect()
+
+    except Exception as e:
+        print(e)
+
+def on_close():
+    close = tkmb.askokcancel("Close", "Would you like to close the program?")
+    if close:
+        window.destroy()
+        try:
+            n.main_server.stop() # type: ignore
+        except:
+            pass
 
 image = ctk.CTkImage(light_image=Image.open("logo.png"),
                     dark_image=Image.open("logo.png"),
@@ -51,6 +61,8 @@ server.pack()
 
 login_button = ctk.CTkButton(login_frame, text = "Log In", command = login)
 login_button.pack(pady = 20)
+
+window.protocol("WM_DELETE_WINDOW", on_close)
 
 #run main loop
 window.mainloop()

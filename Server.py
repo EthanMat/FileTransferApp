@@ -1,12 +1,12 @@
 import socket
 from _thread import * # type: ignore
-import sys
 
 class Server:
     def __init__(self, server):
         self.server = server
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connected_users = []
+        self.keep_running = True
 
     def start_server(self):
         #server = "192.168.0.95"
@@ -16,8 +16,10 @@ class Server:
         try:
             self.s.bind((self.server, port))
 
-        except socket.error as e:
-            str(e)
+        except OSError as e:
+            if e.winerror == 10049:
+                print("Can't start server. Check server address. \nIt should be the exact same as your local IP address.")
+                exit()
         try:
             self.s.listen()
             print("Server started... \nWaiting for connection...")
@@ -55,9 +57,13 @@ class Server:
 
     def get_connected_users(self):
         return self.connected_users
+    
+    def stop(self):
+        self.s.close()
+        self.keep_running = False
 
     def run(self):
-        while True:
+        while self.keep_running:
             conn, addr = self.s.accept()
             print("Connected to:", addr)
 
