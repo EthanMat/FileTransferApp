@@ -1,4 +1,5 @@
 import socket
+import File
 
 class Network:
     def __init__(self, username):
@@ -28,11 +29,13 @@ class Network:
     def send(self, data):
         try:
             self.client.send(str.encode(data))
-            return self.client.recv(2048).decode()
+            new_data = self.client.recv(2048).decode()
+            File.File.binary_string_to_file(new_data, "logo.png")
+            return new_data
         except socket.error as e:
             print(e)
 
-n = Network("Ethan")
-print(n.send("Hello"))
-print(n.send("Working"))
-n.disconnect()
+#n = Network("Ethan")
+#print(n.send("Hello"))
+#print(n.send("Working"))
+#n.disconnect()
