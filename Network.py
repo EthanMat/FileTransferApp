@@ -2,9 +2,10 @@ import socket
 import File
 
 class Network:
-    def __init__(self, username):
+    def __init__(self, username, server):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = "192.168.0.95"
+        self.server = server
+        #self.server = "192.168.0.95"
         #self.server = "10.81.9.86"
         self.port = 5555
         self.addr = (self.server, self.port)
@@ -29,13 +30,12 @@ class Network:
     def send(self, data):
         try:
             self.client.send(str.encode(data))
-            new_data = self.client.recv(2048).decode()
-            File.File.binary_string_to_file(new_data, "logo.png")
-            return new_data
+            return self.client.recv(2048).decode()
         except socket.error as e:
             print(e)
 
-#n = Network("Ethan")
-#print(n.send("Hello"))
-#print(n.send("Working"))
-#n.disconnect()
+if __name__ == "__main__":
+    n = Network("Ethan", "192.168.0.95")
+    print(n.send("Hello"))
+    print(n.send("Working"))
+    n.disconnect()

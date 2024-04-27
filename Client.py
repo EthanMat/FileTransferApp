@@ -4,7 +4,7 @@ import tkinter.messagebox as tkmb
 from tkinter import ttk, font
 from PIL import Image
 from File import File
-import Network
+from Network import Network
 
 # Selecting GUI theme - dark, light , system (for system default) 
 ctk.set_appearance_mode("dark") 
@@ -25,6 +25,10 @@ window.title("Wireless File Transfer")
 def login():
     print(username.get())
     print(server.get())
+    n = Network(username.get(), server.get())
+    print(n.send("Hello"))
+    print(n.send("Working"))
+    n.disconnect()
 
 image = ctk.CTkImage(light_image=Image.open("logo.png"),
                     dark_image=Image.open("logo.png"),
