@@ -12,7 +12,6 @@ class Network:
         self.port = 5555
         self.addr = (self.server, self.port)
         self.username = username
-        self.main_server = None
         self.id = self.connect()
 
     def connect(self):
@@ -21,14 +20,13 @@ class Network:
             self.client.send(str.encode("!" + self.username))
             return self.client.recv(2048).decode()
         except OSError as e:
-            if e.winerror == 10061:
-                print("Websocket not found...")
-                print("Creating Websocket...")
-                self.main_server = Server(self.server)
-                self.main_server.start_server()
-                x = threading.Thread(target = self.main_server.run, args = ())
-                x.start()
-                self.connect()
+            if e.winerror == 10053:
+                print("Could not connect to server...")
+                print("User already exists!")
+            elif e.winerror == 10061 or e.winerror == 10057:
+                print("Server not found...")
+                print("Check server address or check \"Run Server?\"")
+                raise OSError("Server not found...")
             else:
                 print(e)
 

@@ -5,7 +5,7 @@ class Server:
     def __init__(self, server):
         self.server = server
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connected_users = []
+        self.connected_users = {}
         self.keep_running = True
 
     def start_server(self):
@@ -30,21 +30,27 @@ class Server:
     def threaded_client(self, conn):
         #conn.send(str.encode("Connected"))
         reply = ""
-
-        while True:
+        checking = True
+        while checking:
             try:
                 data = conn.recv(2048)
                 reply = data.decode("utf-8")
+                keys = self.connected_users.keys()
 
                 if not data:
                     print("Disconnected")
                     break
                 else:
                     if reply.find("!") > -1:
-                        self.connected_users.append(reply.lstrip("!"))
+                        for name in keys:
+                            if name == reply.lstrip("!"):
+                                conn.close()
+                            
+                        self.connected_users[reply.lstrip("!")] = conn
                         print(reply.lstrip("!") + " connected")
+                        
                     if reply.find("@") > -1:
-                        self.connected_users.remove(reply.lstrip("@"))
+                        del self.connected_users[reply.lstrip("@")]
                         print(reply.lstrip("@") + " disconnected")
 
                     print("Received: " + reply)
@@ -66,7 +72,6 @@ class Server:
         while self.keep_running:
             conn, addr = self.s.accept()
             print("Connected to:", addr)
-
             start_new_thread(self.threaded_client, (conn,))
 
 if __name__ == "__main__":
