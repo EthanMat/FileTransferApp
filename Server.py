@@ -17,15 +17,17 @@ class Server:
             self.s.bind((self.server, port))
 
         except OSError as e:
-            if e.winerror == 10049:
-                print("Can't start server. Check server address. \nIt should be the exact same as your local IP address.")
-                exit()
+            if e.winerror == 10049 or e.winerror == 10060:
+                # print("Can't start server. Check server address. \nIt should be the exact same as your local IP address.")
+                # pass
+                raise OSError("Server1")
         try:
             self.s.listen()
             print("Server started... \nWaiting for connection...")
         except:
-            print("Can't start server. Check server address.")
-            exit()
+            raise OSError("Server2")
+            # print("Can't start server. Check server address.")
+            # pass
 
     def threaded_client(self, conn):
         #conn.send(str.encode("Connected"))
@@ -45,6 +47,7 @@ class Server:
                         for name in keys:
                             if name == reply.lstrip("!"):
                                 conn.close()
+                                return
                             
                         self.connected_users[reply.lstrip("!")] = conn
                         print(reply.lstrip("!") + " connected")
@@ -78,4 +81,3 @@ if __name__ == "__main__":
     main_server = Server("192.168.0.95")
     main_server.start_server()
     main_server.run()
-    

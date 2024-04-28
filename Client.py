@@ -29,27 +29,32 @@ def login():
     if is_host_computer.get() == 1:
         global main_server
         main_server = Server(server.get())
-        main_server.start_server()
-        x = threading.Thread(target = main_server.run)
-        x.start()
-        is_host_computer.toggle()
+        try:
+            main_server.start_server()
+            x = threading.Thread(target = main_server.run)
+            x.start()
+            is_host_computer.toggle()
+            is_host_computer.configure(state="disabled")
+        except OSError as e:
+            if str(e) == "Server1":
+                x = tkmb.showerror("Can't start Server", "Check server address. It should be the exact same as your local IP address.")
+                return
+            elif str(e) == "Server2":
+                x = tkmb.showerror("Can't start Server", "Check server address.")
+                return
     try: 
         global n
         n = Network(username.get(), server.get())
         print(n.send("Hello"))
         print(n.send("Working"))
-        print(main_server.get_connected_users()) #type: ignore
+        print(main_server.get_connected_users())
         #n.disconnect()
 
     except OSError as e:
-        x = False
-        if e == "Server not found...":
-            x = tkmb.askretrycancel(str(e), "Check server address or check \"Run Server?\"")
-        elif e == "Could not connect to server...":
-            x = tkmb.askretrycancel(str(e), "User already exists!")
-
-        if x:
-            pass
+        if str(e) == "Server not found...":
+            x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
+        elif str(e) == "Could not connect to server...":
+            x = tkmb.showerror(str(e), "User already exists!")
 
 def on_close():
     close = tkmb.askokcancel("Close", "Would you like to close the program?")
