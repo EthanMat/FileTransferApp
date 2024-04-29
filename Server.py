@@ -55,6 +55,10 @@ class Server:
                     if reply.find("@") > -1:
                         del self.connected_users[reply.lstrip("@")]
                         print(reply.lstrip("@") + " disconnected")
+                    
+                    # if reply.find("*") > -1:
+                    #     conn.send(str.encode(str(len(self.get_connected_users()))))
+                    #     continue
 
                     print("Received: " + reply)
                     print("Sending : " + reply)

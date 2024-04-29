@@ -13,7 +13,7 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green") 
 
 global main_server
-global n
+clients_connected = 0
 
 #create a window and set its geometry
 window = ctk.CTk()
@@ -24,6 +24,15 @@ window.minsize(60,50)
 #window customizions
 window.iconbitmap("Icon.ico")
 window.title("Wireless File Transfer")
+
+def main_page(n):
+    page = ctk.CTkToplevel()
+
+    page.protocol("WM_DELETE_WINDOW", lambda args = (page, n): on_close_main(args))
+
+    #Page customizations
+    page.title(username.get())
+    page.iconbitmap("Icon.ico")
 
 def login():
     if is_host_computer.get() == 1:
@@ -43,28 +52,46 @@ def login():
                 x = tkmb.showerror("Can't start Server", "Check server address.")
                 return
     try: 
-        global n
         n = Network(username.get(), server.get())
-        print(n.send("Hello"))
-        print(n.send("Working"))
+        global clients_connected
+        clients_connected += 1
+        #TODO: This number is greater than 1 for testing perposes, fix that
+        if (clients_connected > 5):
+            n.disconnect()
+            raise OSError("Multiple Clients")
         print(main_server.get_connected_users())
         #n.disconnect()
 
     except OSError as e:
         if str(e) == "Server not found...":
             x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
+            return
         elif str(e) == "Could not connect to server...":
             x = tkmb.showerror(str(e), "User already exists!")
+            n.disconnect()
+            return
+        elif str(e) == "Multiple Clients":
+            x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
+            n.disconnect()
+            return
+    
+    main = threading.Thread(target = main_page, args = (n,))
+    main.start()
 
-def on_close():
+def on_close_login():
     close = tkmb.askokcancel("Close", "Would you like to close the program?")
     if close:
         window.destroy()
-        n.disconnect() # type: ignore
         try:
-            main_server.stop() # type: ignore
+            main_server.stop() 
         except:
             pass
+
+def on_close_main(page):
+    page[0].destroy()
+    page[1].disconnect() 
+    global clients_connected
+    clients_connected -= 1 
 
 image = ctk.CTkImage(light_image=Image.open("logo.png"),
                     dark_image=Image.open("logo.png"),
@@ -91,7 +118,7 @@ login_button.pack(pady = 20)
 is_host_computer = ctk.CTkSwitch(login_frame, text = "Run Server?")
 is_host_computer.pack(pady = 5)
 
-window.protocol("WM_DELETE_WINDOW", on_close)
+window.protocol("WM_DELETE_WINDOW", on_close_login)
 
 #run main loop
 window.mainloop()
