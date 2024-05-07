@@ -22,17 +22,20 @@ window.geometry("500x530")
 window.minsize(60,50)
  
 #window customizions
-window.iconbitmap("Icon.ico")
+window.iconbitmap(default="Icon.ico")
 window.title("Wireless File Transfer")
 
 def main_page(n):
-    page = ctk.CTkToplevel()
+    page = ctk.CTkToplevel(window)
+    page.grab_set()
 
     page.protocol("WM_DELETE_WINDOW", lambda args = (page, n): on_close_main(args))
 
     #Page customizations
     page.title(username.get())
-    page.iconbitmap("Icon.ico")
+    page.geometry("400x400")
+    page.attributes("-topmost", True)
+    page.attributes("-topmost", False)
 
 def login():
     if is_host_computer.get() == 1:
@@ -60,23 +63,30 @@ def login():
             n.disconnect()
             raise OSError("Multiple Clients")
         print(main_server.get_connected_users())
+        main = threading.Thread(target = main_page, args = (n,))
+        main.start()
         #n.disconnect()
 
     except OSError as e:
         if str(e) == "Server not found...":
             x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
+            clients_connected -= 1
             return
         elif str(e) == "Could not connect to server...":
             x = tkmb.showerror(str(e), "User already exists!")
             n.disconnect()
+            clients_connected -= 1
             return
         elif str(e) == "Multiple Clients":
             x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
             n.disconnect()
+            clients_connected -= 1
             return
-    
-    main = threading.Thread(target = main_page, args = (n,))
-    main.start()
+        
+    except Exception as e:
+        x = tkmb.showerror("Error", str(e))
+        clients_connected -= 1
+        return
 
 def on_close_login():
     close = tkmb.askokcancel("Close", "Would you like to close the program?")

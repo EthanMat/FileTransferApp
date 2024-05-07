@@ -24,14 +24,17 @@ class Network:
                 print("Server not found...")
                 print("Check server address or check \"Run Server?\"")
                 #raise OSError("Server not found...")
-                return
+                return OSError("Server not found...")
             elif e.winerror == 10049 or e.winerror == 10060:
                 print("Can't start server. Check server address. \nIt should be the exact same as your local IP address.")
                 #raise OSError("Server1")
                 return
+            elif e.winerror == 10003:
+                print(str(e))
+                return
             else:
                 print(e)
-                pass
+                return
 
         except Exception as e:
             print(e)

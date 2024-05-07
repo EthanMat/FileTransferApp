@@ -47,7 +47,7 @@ class Server:
                         for name in keys:
                             if name == reply.lstrip("!"):
                                 conn.close()
-                                return
+                                raise OSError("User already exists...")
                             
                         self.connected_users[reply.lstrip("!")] = conn
                         print(reply.lstrip("!") + " connected")
@@ -55,6 +55,8 @@ class Server:
                     if reply.find("@") > -1:
                         del self.connected_users[reply.lstrip("@")]
                         print(reply.lstrip("@") + " disconnected")
+                        conn.close()
+                        return OSError(10003, "User already exists...")
                     
                     # if reply.find("*") > -1:
                     #     conn.send(str.encode(str(len(self.get_connected_users()))))
