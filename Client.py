@@ -7,14 +7,13 @@ from Network import Network
 import threading
 
 # Selecting GUI theme - dark, light , system (for system default) 
-ctk.set_appearance_mode("system") 
+ctk.set_appearance_mode("dark") 
   
 # Selecting color theme - blue, green, dark-blue 
 ctk.set_default_color_theme("green") 
 
 num_clients_connected = 0
-clients_connected = []
-
+clients_connected = [] 
 
 #create a window and set its geometry
 window = ctk.CTk()
@@ -29,12 +28,19 @@ window.title("Wireless File Transfer")
 def update_users():
     global n
     global clients_connected
+    global dropdown_menu
     clients_connected = n.get_connected_users().split()
+    try:
+        clients_connected.remove(username.get())
+    except: 
+        pass
+    dropdown_menu.configure(values = clients_connected)
     print(clients_connected)
 
 def main_page():
     global page
     global n
+    global dropdown_menu
     page = ctk.CTkToplevel(window)
 
     page.protocol("WM_DELETE_WINDOW", on_close_main)
@@ -43,7 +49,12 @@ def main_page():
     page.title(username.get())
     page.geometry("400x400")
 
+    dropdown_menu = ctk.CTkOptionMenu(page, values = clients_connected)
     update_users()
+    dropdown_menu.pack()
+
+    refresh = ctk.CTkButton(page, text = "Refresh", command = update_users)
+    refresh.pack()
 
 def login():
     #This block of code starts the server if the slider "Run Server?" is toggled on

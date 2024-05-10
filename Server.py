@@ -57,7 +57,8 @@ class Server:
                         del self.connected_users[reply.lstrip("@")]
                         print(reply.lstrip("@") + " disconnected")
                         conn.close()
-                        return OSError(10003, "User already exists...")
+                        break
+                        #return OSError(10003, "User already exists...")
                     
                     if reply.find("*") > -1:
                         users = ""
