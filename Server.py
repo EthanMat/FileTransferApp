@@ -1,4 +1,5 @@
 import socket
+import json
 from _thread import * # type: ignore
 
 class Server:
@@ -58,9 +59,12 @@ class Server:
                         conn.close()
                         return OSError(10003, "User already exists...")
                     
-                    # if reply.find("*") > -1:
-                    #     conn.send(str.encode(str(len(self.get_connected_users()))))
-                    #     continue
+                    if reply.find("*") > -1:
+                        users = ""
+                        for name in keys:
+                            users += name + " "
+                        conn.send(str.encode(users))
+                        continue
 
                     print("Received: " + reply)
                     print("Sending : " + reply)

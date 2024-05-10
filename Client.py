@@ -12,7 +12,6 @@ ctk.set_appearance_mode("dark")
 # Selecting color theme - blue, green, dark-blue 
 ctk.set_default_color_theme("green") 
 
-global main_server
 clients_connected = 0
 
 #create a window and set its geometry
@@ -25,17 +24,19 @@ window.minsize(60,50)
 window.iconbitmap(default="Icon.ico")
 window.title("Wireless File Transfer")
 
-def main_page(n):
+def main_page():
+    global page
+    global n
     page = ctk.CTkToplevel(window)
-    page.grab_set()
 
-    page.protocol("WM_DELETE_WINDOW", lambda args = (page, n): on_close_main(args))
+    page.protocol("WM_DELETE_WINDOW", on_close_main)
 
     #Page customizations
     page.title(username.get())
     page.geometry("400x400")
-    page.attributes("-topmost", True)
-    page.attributes("-topmost", False)
+
+    clients = n.send("*")
+    print(clients)
 
 def login():
     if is_host_computer.get() == 1:
@@ -43,8 +44,8 @@ def login():
         main_server = Server(server.get())
         try:
             main_server.start_server()
-            x = threading.Thread(target = main_server.run)
-            x.start()
+            thread = threading.Thread(target = main_server.run)
+            thread.start()
             is_host_computer.toggle()
             is_host_computer.configure(state="disabled")
         except OSError as e:
@@ -55,32 +56,35 @@ def login():
                 x = tkmb.showerror("Can't start Server", "Check server address.")
                 return
     try: 
+        global n
         n = Network(username.get(), server.get())
         global clients_connected
         clients_connected += 1
         #TODO: This number is greater than 1 for testing perposes, fix that
-        if (clients_connected > 5):
+        if (clients_connected > 1):
             n.disconnect()
             raise OSError("Multiple Clients")
-        print(main_server.get_connected_users())
-        main = threading.Thread(target = main_page, args = (n,))
-        main.start()
+        #print(main_server.get_connected_users())
+        main_page()
         #n.disconnect()
 
     except OSError as e:
         if str(e) == "Server not found...":
             x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
             clients_connected -= 1
+            on_close_login()
             return
         elif str(e) == "Could not connect to server...":
             x = tkmb.showerror(str(e), "User already exists!")
             n.disconnect()
+            on_close_login()
             clients_connected -= 1
             return
         elif str(e) == "Multiple Clients":
             x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
             n.disconnect()
-            clients_connected -= 1
+            on_close_login()
+
             return
         
     except Exception as e:
@@ -97,9 +101,11 @@ def on_close_login():
         except:
             pass
 
-def on_close_main(page):
-    page[0].destroy()
-    page[1].disconnect() 
+def on_close_main():
+    global page
+    page.destroy()
+    global n
+    n.disconnect() 
     global clients_connected
     clients_connected -= 1 
 
