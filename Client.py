@@ -7,12 +7,14 @@ from Network import Network
 import threading
 
 # Selecting GUI theme - dark, light , system (for system default) 
-ctk.set_appearance_mode("dark") 
+ctk.set_appearance_mode("system") 
   
 # Selecting color theme - blue, green, dark-blue 
 ctk.set_default_color_theme("green") 
 
-clients_connected = 0
+num_clients_connected = 0
+clients_connected = []
+
 
 #create a window and set its geometry
 window = ctk.CTk()
@@ -23,6 +25,12 @@ window.minsize(60,50)
 #window customizions
 window.iconbitmap(default="Icon.ico")
 window.title("Wireless File Transfer")
+
+def update_users():
+    global n
+    global clients_connected
+    clients_connected = n.get_connected_users().split()
+    print(clients_connected)
 
 def main_page():
     global page
@@ -35,10 +43,10 @@ def main_page():
     page.title(username.get())
     page.geometry("400x400")
 
-    clients = n.send("*")
-    print(clients)
+    update_users()
 
 def login():
+    #This block of code starts the server if the slider "Run Server?" is toggled on
     if is_host_computer.get() == 1:
         global main_server
         main_server = Server(server.get())
@@ -55,41 +63,38 @@ def login():
             elif str(e) == "Server2":
                 x = tkmb.showerror("Can't start Server", "Check server address.")
                 return
+            
+    #Tries to open a connection to the server and open the UI
     try: 
         global n
+        global num_clients_connected
         n = Network(username.get(), server.get())
-        global clients_connected
-        clients_connected += 1
+        num_clients_connected += 1
+        main_page()
         #TODO: This number is greater than 1 for testing perposes, fix that
-        if (clients_connected > 1):
+        if (num_clients_connected > 1):
             n.disconnect()
             raise OSError("Multiple Clients")
-        #print(main_server.get_connected_users())
-        main_page()
-        #n.disconnect()
 
     except OSError as e:
         if str(e) == "Server not found...":
             x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
-            clients_connected -= 1
-            on_close_login()
+            num_clients_connected -= 1
             return
         elif str(e) == "Could not connect to server...":
             x = tkmb.showerror(str(e), "User already exists!")
             n.disconnect()
-            on_close_login()
-            clients_connected -= 1
+            num_clients_connected -= 1
             return
         elif str(e) == "Multiple Clients":
             x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
             n.disconnect()
-            on_close_login()
-
+            on_close_main()
             return
         
     except Exception as e:
         x = tkmb.showerror("Error", str(e))
-        clients_connected -= 1
+        num_clients_connected -= 1
         return
 
 def on_close_login():
@@ -106,8 +111,8 @@ def on_close_main():
     page.destroy()
     global n
     n.disconnect() 
-    global clients_connected
-    clients_connected -= 1 
+    global num_clients_connected
+    num_clients_connected -= 1 
 
 image = ctk.CTkImage(light_image=Image.open("logo.png"),
                     dark_image=Image.open("logo.png"),

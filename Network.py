@@ -23,12 +23,10 @@ class Network:
             if e.winerror == 10061 or e.winerror == 10057:
                 print("Server not found...")
                 print("Check server address or check \"Run Server?\"")
-                #raise OSError("Server not found...")
-                return OSError("Server not found...")
+                raise OSError("Server not found...")
             elif e.winerror == 10049 or e.winerror == 10060:
                 print("Can't start server. Check server address. \nIt should be the exact same as your local IP address.")
-                #raise OSError("Server1")
-                return
+                raise OSError("Server1")
             elif e.winerror == 10003:
                 print(str(e))
                 return
@@ -39,9 +37,9 @@ class Network:
         except Exception as e:
             print(e)
 
-    # def get_connected_users(self):
-    #     self.client.send(str.encode("*"))
-    #     return self.client.recv(2048).decode()
+    def get_connected_users(self):
+        self.client.send(str.encode("*"))
+        return self.client.recv(2048).decode()
 
     def disconnect(self):
         try:
