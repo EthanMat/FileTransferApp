@@ -30,12 +30,16 @@ class Network:
             elif e.winerror == 10003:
                 print(str(e))
                 return
+            elif e.errno == 11001:
+                print("Non existant server address")
+                raise OSError("Server not found...")
             else:
                 print(e)
                 return
 
         except Exception as e:
             print(e)
+            raise OSError("Server1")
 
     def get_connected_users(self):
         self.client.send(str.encode("*"))

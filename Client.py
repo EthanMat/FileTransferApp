@@ -56,9 +56,7 @@ def main_page(page):
 
     #Page customizations
     page.title(username.get())
-    page.geometry("400x400")
-
-    page.grab_set()
+    page.geometry("500x500")
 
     clients_connected.append("Select a user")
     selected_value = ctk.StringVar()
@@ -113,20 +111,24 @@ def login():
         if str(e) == "Server not found...":
             x = tkmb.showerror(str(e), "Check server address or check \"Run Server?\"")
             num_clients_connected -= 1
+            login_page()
             return
         elif str(e) == "Could not connect to server...":
             x = tkmb.showerror(str(e), "User already exists!")
             n.disconnect()
             num_clients_connected -= 1
+            login_page()
             return
         elif str(e) == "Multiple Clients":
             x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
             n.disconnect()
+            login_page()
             return
         
     except Exception as e:
         x = tkmb.showerror("Error", str(e))
         num_clients_connected -= 1
+        login_page()
         return
 
 def on_close_main():
@@ -141,46 +143,55 @@ def on_close_main():
 def on_close_login():
     username.set(username_entry.get())
     server.set(server_entry.get())
-    print(server.get())
     destroy(logo, welcome_label, login_frame)
 
 def destroy(*args):
     for arg in args:
         arg.destroy()
 
-image = ctk.CTkImage(light_image=Image.open("logo.png"),
-                    dark_image=Image.open("logo.png"),
-                    size=(128, 128))
+def login_page():
+    image = ctk.CTkImage(light_image=Image.open("logo.png"),
+                        dark_image=Image.open("logo.png"),
+                        size=(128, 128))
 
-logo = ctk.CTkLabel(window, image = image, text = "")
-logo.pack(pady=55)
+    global logo
+    logo = ctk.CTkLabel(window, image = image, text = "")
+    logo.pack(pady=55)
 
-welcome_label = ctk.CTkLabel(window, text="Welcome", font = ("Trebuchet MS", 42, "bold"))
-welcome_label.pack(padx = 10)
+    global welcome_label
+    welcome_label = ctk.CTkLabel(window, text="Welcome", font = ("Trebuchet MS", 42, "bold"))
+    welcome_label.pack(padx = 10)
 
-login_frame = ctk.CTkFrame(window)
-login_frame.pack(pady=20,padx=150,fill='both',expand=True)
+    global login_frame
+    login_frame = ctk.CTkFrame(window)
+    login_frame.pack(pady=20,padx=150,fill='both',expand=True)
 
-username = ctk.StringVar()
+    global username
+    username = ctk.StringVar()
 
-username_entry = ctk.CTkEntry(login_frame, placeholder_text = "Username")
-username_entry.pack(pady = 20)
+    global username_entry
+    username_entry = ctk.CTkEntry(login_frame, placeholder_text = "Username")
+    username_entry.pack(pady = 20)
 
-server = ctk.StringVar()
+    global server
+    server = ctk.StringVar()
 
-server_entry = ctk.CTkEntry(master = login_frame, placeholder_text = "Server IP Address")
-server_entry.pack()
+    global server_entry
+    server_entry = ctk.CTkEntry(master = login_frame, placeholder_text = "Server IP Address")
+    server_entry.pack()
 
-login_button = ctk.CTkButton(login_frame, text = "Log In", command = login)
-login_button.pack(pady = 20)
+    login_button = ctk.CTkButton(login_frame, text = "Log In", command = login)
+    login_button.pack(pady = 20)
 
-is_host_computer = ctk.BooleanVar()
-is_host_computer.set(False)
+    global is_host_computer
+    is_host_computer = ctk.BooleanVar()
+    is_host_computer.set(False)
 
-is_host_computer_switch = ctk.CTkSwitch(login_frame, text = "Run Server?", variable = is_host_computer)
-is_host_computer_switch.pack(pady = 5)
+    is_host_computer_switch = ctk.CTkSwitch(login_frame, text = "Run Server?", variable = is_host_computer)
+    is_host_computer_switch.pack(pady = 5)
 
-window.protocol("WM_DELETE_WINDOW", on_close_main)
+    window.protocol("WM_DELETE_WINDOW", on_close_main)
 
+login_page()
 #run main loop
 window.mainloop()
