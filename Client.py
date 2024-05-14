@@ -1,5 +1,6 @@
 import customtkinter as ctk 
 import tkinter.messagebox as tkmb 
+from tkinter import filedialog
 from PIL import Image
 from File import File
 from Server import Server
@@ -25,6 +26,17 @@ window.minsize(60,50)
 window.iconbitmap(default="Icon.ico")
 window.title("Wireless File Transfer")
 
+def open_file_dialog():
+    file_path = filedialog.askopenfiles(title="Select a File(s)", filetypes=[("All files", "*.*")])
+    if file_path:
+        selected_file_label.configure(text=f"Selected File(s): {file_path}")
+        process_file(file_path)
+        for file in file_path:
+            print(file.name)
+
+def process_file(file_path):
+    pass
+
 def update_users():
     global n
     global clients_connected
@@ -37,11 +49,8 @@ def update_users():
     dropdown_menu.configure(values = clients_connected)
     print(clients_connected)
 
-def main_page():
-    global page
+def main_page(page):
     global n
-    global dropdown_menu
-    page = ctk.CTkToplevel(window)
 
     page.protocol("WM_DELETE_WINDOW", on_close_main)
 
@@ -49,12 +58,26 @@ def main_page():
     page.title(username.get())
     page.geometry("400x400")
 
-    dropdown_menu = ctk.CTkOptionMenu(page, values = clients_connected)
+    page.grab_set()
+
+    clients_connected.append("Select a user")
+    selected_value = ctk.StringVar()
+    selected_value.set(clients_connected[0])
+
+    global dropdown_menu
+    dropdown_menu = ctk.CTkOptionMenu(page, values = clients_connected, variable = selected_value)
     update_users()
     dropdown_menu.pack()
 
     refresh = ctk.CTkButton(page, text = "Refresh", command = update_users)
     refresh.pack()
+
+    global selected_file_label
+    selected_file_label = ctk.CTkLabel(page, text = "Selected file: ")
+    selected_file_label.pack()
+
+    select_file = ctk.CTkButton(page, text = "Select File", command = open_file_dialog)
+    select_file.pack()
 
 def login():
     #This block of code starts the server if the slider "Run Server?" is toggled on
@@ -65,8 +88,6 @@ def login():
             main_server.start_server()
             thread = threading.Thread(target = main_server.run)
             thread.start()
-            is_host_computer.toggle()
-            is_host_computer.configure(state="disabled")
         except OSError as e:
             if str(e) == "Server1":
                 x = tkmb.showerror("Can't start Server", "Check server address. It should be the exact same as your local IP address.")
@@ -79,9 +100,10 @@ def login():
     try: 
         global n
         global num_clients_connected
+        on_close_login()
         n = Network(username.get(), server.get())
         num_clients_connected += 1
-        main_page()
+        main_page(window)
         #TODO: This number is greater than 1 for testing perposes, fix that
         if (num_clients_connected > 1):
             n.disconnect()
@@ -100,7 +122,6 @@ def login():
         elif str(e) == "Multiple Clients":
             x = tkmb.showerror("Error", "Why would you want to send files to yourself?")
             n.disconnect()
-            on_close_main()
             return
         
     except Exception as e:
@@ -108,7 +129,7 @@ def login():
         num_clients_connected -= 1
         return
 
-def on_close_login():
+def on_close_main():
     close = tkmb.askokcancel("Close", "Would you like to close the program?")
     if close:
         window.destroy()
@@ -117,13 +138,15 @@ def on_close_login():
         except:
             pass
 
-def on_close_main():
-    global page
-    page.destroy()
-    global n
-    n.disconnect() 
-    global num_clients_connected
-    num_clients_connected -= 1 
+def on_close_login():
+    username.set(username_entry.get())
+    server.set(server_entry.get())
+    print(server.get())
+    destroy(logo, welcome_label, login_frame)
+
+def destroy(*args):
+    for arg in args:
+        arg.destroy()
 
 image = ctk.CTkImage(light_image=Image.open("logo.png"),
                     dark_image=Image.open("logo.png"),
@@ -138,19 +161,26 @@ welcome_label.pack(padx = 10)
 login_frame = ctk.CTkFrame(window)
 login_frame.pack(pady=20,padx=150,fill='both',expand=True)
 
-username = ctk.CTkEntry(login_frame, placeholder_text = "Username")
-username.pack(pady = 20)
+username = ctk.StringVar()
 
-server = ctk.CTkEntry(master = login_frame, placeholder_text = "Server IP Address")
-server.pack()
+username_entry = ctk.CTkEntry(login_frame, placeholder_text = "Username")
+username_entry.pack(pady = 20)
+
+server = ctk.StringVar()
+
+server_entry = ctk.CTkEntry(master = login_frame, placeholder_text = "Server IP Address")
+server_entry.pack()
 
 login_button = ctk.CTkButton(login_frame, text = "Log In", command = login)
 login_button.pack(pady = 20)
 
-is_host_computer = ctk.CTkSwitch(login_frame, text = "Run Server?")
-is_host_computer.pack(pady = 5)
+is_host_computer = ctk.BooleanVar()
+is_host_computer.set(False)
 
-window.protocol("WM_DELETE_WINDOW", on_close_login)
+is_host_computer_switch = ctk.CTkSwitch(login_frame, text = "Run Server?", variable = is_host_computer)
+is_host_computer_switch.pack(pady = 5)
+
+window.protocol("WM_DELETE_WINDOW", on_close_main)
 
 #run main loop
 window.mainloop()
