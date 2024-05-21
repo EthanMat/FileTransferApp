@@ -67,6 +67,12 @@ class Server:
                         conn.send(str.encode(users))
                         continue
 
+                    if reply.find("0") > -1 and reply.find("1") > -1:
+                        user_to_send = reply[:reply.index(" ")]
+                        self.connected_users[user_to_send].send(str.encode(reply.lstrip(user_to_send))) #type: ignore
+                        conn.send(str.encode("Sent"))
+                        continue
+
                     print("Received: " + reply)
                     print("Sending : " + reply)
 

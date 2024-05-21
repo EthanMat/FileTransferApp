@@ -6,6 +6,7 @@ from File import File
 from Server import Server
 from Network import Network
 import threading
+import time
 
 # Selecting GUI theme - dark, light , system (for system default) 
 ctk.set_appearance_mode("dark") 
@@ -15,6 +16,7 @@ ctk.set_default_color_theme("green")
 
 num_clients_connected = 0
 clients_connected = [] 
+names = []
 
 #create a window and set its geometry
 window = ctk.CTk()
@@ -26,27 +28,74 @@ window.minsize(60,50)
 window.iconbitmap(default="Icon.ico")
 window.title("Wireless File Transfer")
 
+def listen_for_files():
+    while True:
+        try:
+            data = n.listen()
+            print(data)
+            if data.find("0") > -1:
+                File.binary_string_to_file(data, "C:\\Users\\ethma\\Downloads\\TEST.PNG")
+                return
+        except:
+            continue    
+
+def send_file():
+    try:
+        for file in names:
+            print(n.send(dropdown_menu.get() + " " + File.file_to_binary_string(file)))
+            print(File.file_to_binary_string(file))
+
+    except NameError as e:
+        x = tkmb.showerror("Error", "No files selected...")
+
+def split_string(string):
+    length = len(string)
+    return_string = ""
+    for i in range(length):
+        if i >= length / 2:
+            return_string += string[i]
+    return return_string
+
 def open_file_dialog():
+    global names
     file_path = filedialog.askopenfiles(title="Select a File(s)", filetypes=[("All files", "*.*")])
     if file_path:
-        selected_file_label.configure(text=f"Selected File(s): {file_path}")
-        process_file(file_path)
+        for item in scrolling_frame.winfo_children():
+            destroy(item)
+        for file in file_path:
+            names.append(file.name)
+        for n in names:
+            x = ctk.CTkLabel(scrolling_frame, text = "..." + split_string(n))
+            x.pack()
+        process = threading.Thread(target = process_file, args = (file_path,))
+        process.start()
         for file in file_path:
             print(file.name)
 
 def process_file(file_path):
-    pass
+    file_data = []
+    progress_bar = ctk.CTkProgressBar(window, orientation = "horizontal", determinate_speed = (1/len(file_path)) * 10)
+    progress_bar.set(0)
+    progress_bar.pack()
+    for file in file_path:
+        file_data.append(File.file_to_binary_string(file.name))
+        progress_bar.step()
+    progress_bar.set(1)
+    time.sleep(0.5)
+    destroy(progress_bar)
+    #print(file_data)
 
-def update_users():
+
+def update_users(string):
     global n
     global clients_connected
     global dropdown_menu
-    clients_connected = n.get_connected_users().split()
     try:
+        clients_connected = n.get_connected_users().split()
         clients_connected.remove(username.get())
+        dropdown_menu.configure(values = clients_connected)
     except: 
         pass
-    dropdown_menu.configure(values = clients_connected)
     print(clients_connected)
 
 def main_page(page):
@@ -62,20 +111,32 @@ def main_page(page):
     selected_value = ctk.StringVar()
     selected_value.set(clients_connected[0])
 
-    global dropdown_menu
-    dropdown_menu = ctk.CTkOptionMenu(page, values = clients_connected, variable = selected_value)
-    update_users()
-    dropdown_menu.pack()
+    top_frame = ctk.CTkFrame(page, width = 3000, height = 200, bg_color = "transparent")
+    top_frame.pack_configure(pady=55,padx=65,fill='none',expand=False)
 
-    refresh = ctk.CTkButton(page, text = "Refresh", command = update_users)
-    refresh.pack()
+    global dropdown_menu
+    dropdown_menu = ctk.CTkOptionMenu(top_frame, values = clients_connected, variable = selected_value, command = update_users)
+    dropdown_menu.grid(row = 0, column = 0, padx = 10)
+
+    # refresh = ctk.CTkButton(top_frame, text = "Refresh", width = 50, height = 50)
+    # refresh.grid(row = 0, column = 1)
+
+    select_file_button = ctk.CTkButton(page, text = "Select File", command = open_file_dialog)
+    select_file_button.pack()
 
     global selected_file_label
-    selected_file_label = ctk.CTkLabel(page, text = "Selected file: ")
-    selected_file_label.pack()
+    selected_file_label = ctk.CTkLabel(page, text = "Selected file(s): ")
+    selected_file_label.pack(pady = 15)
 
-    select_file = ctk.CTkButton(page, text = "Select File", command = open_file_dialog)
-    select_file.pack()
+    global scrolling_frame
+    scrolling_frame = ctk.CTkScrollableFrame(page, width = 400)
+    scrolling_frame.pack()
+
+    send_file_button = ctk.CTkButton(page, text = "Send File(s)", command = send_file)
+    send_file_button.pack(pady = 20)
+
+    #listener = threading.Thread(target = listen_for_files)
+    #listener.start()
 
 def login():
     #This block of code starts the server if the slider "Run Server?" is toggled on
@@ -137,6 +198,7 @@ def on_close_main():
         window.destroy()
         try:
             main_server.stop() 
+            n.disconnect()
         except:
             pass
 

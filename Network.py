@@ -62,6 +62,12 @@ class Network:
                 print("User already exists!")
                 self.disconnect()
                 raise OSError("Could not connect to server...")
+    
+    def listen(self):
+        try:
+            return self.client.recv(2048).decode()
+        except:
+            return ""
 
 if __name__ == "__main__":
     n = Network("Ethan", "192.168.0.95")
