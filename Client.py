@@ -32,10 +32,11 @@ def listen_for_files():
     while True:
         try:
             data = n.listen()
-            print(data)
             if data.find("0") > -1:
                 File.binary_string_to_file(data, "C:\\Users\\ethma\\Downloads\\TEST.PNG")
+                print(data)
                 return
+            time.sleep(7)
         except:
             continue    
 
@@ -43,7 +44,7 @@ def send_file():
     try:
         for file in names:
             print(n.send(dropdown_menu.get() + " " + File.file_to_binary_string(file)))
-            print(File.file_to_binary_string(file))
+            #print(File.file_to_binary_string(file))
 
     except NameError as e:
         x = tkmb.showerror("Error", "No files selected...")
@@ -135,8 +136,8 @@ def main_page(page):
     send_file_button = ctk.CTkButton(page, text = "Send File(s)", command = send_file)
     send_file_button.pack(pady = 20)
 
-    #listener = threading.Thread(target = listen_for_files)
-    #listener.start()
+    listener = threading.Thread(target = listen_for_files)
+    listener.start()
 
 def login():
     #This block of code starts the server if the slider "Run Server?" is toggled on
