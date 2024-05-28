@@ -17,6 +17,7 @@ ctk.set_default_color_theme("green")
 num_clients_connected = 0
 clients_connected = [] 
 names = []
+pause_listener = False
 
 #create a window and set its geometry
 window = ctk.CTk()
@@ -31,20 +32,24 @@ window.title("Wireless File Transfer")
 def listen_for_files():
     while True:
         try:
-            data = n.listen()
-            if data.find("0") > -1:
-                File.binary_string_to_file(data, "C:\\Users\\ethma\\Downloads\\TEST.PNG")
-                print(data)
-                return
-            time.sleep(7)
+            if not pause_listener:
+                data = n.listen()
+                if data.find("0") > -1:
+                    #File.binary_string_to_file(data, "C:\\Users\\ethma\\Downloads\\TEST.PNG")
+                    print(data)
+                    return
         except:
             continue    
 
 def send_file():
+    global pause_listener
     try:
+        pause_listener = True
+        n.send("^" + dropdown_menu.get())
         for file in names:
-            print(n.send(dropdown_menu.get() + " " + File.file_to_binary_string(file)))
+            n.send_file(file)
             #print(File.file_to_binary_string(file))
+        pause_listener = False
 
     except NameError as e:
         x = tkmb.showerror("Error", "No files selected...")
@@ -87,16 +92,19 @@ def process_file(file_path):
     #print(file_data)
 
 
-def update_users(string):
+def update_users():
     global n
     global clients_connected
     global dropdown_menu
+    global pause_listener
     try:
+        pause_listener = True
         clients_connected = n.get_connected_users().split()
         clients_connected.remove(username.get())
         dropdown_menu.configure(values = clients_connected)
     except: 
         pass
+    pause_listener = False
     print(clients_connected)
 
 def main_page(page):
@@ -116,11 +124,11 @@ def main_page(page):
     top_frame.pack_configure(pady=55,padx=65,fill='none',expand=False)
 
     global dropdown_menu
-    dropdown_menu = ctk.CTkOptionMenu(top_frame, values = clients_connected, variable = selected_value, command = update_users)
+    dropdown_menu = ctk.CTkOptionMenu(top_frame, values = clients_connected, variable = selected_value)
     dropdown_menu.grid(row = 0, column = 0, padx = 10)
 
-    # refresh = ctk.CTkButton(top_frame, text = "Refresh", width = 50, height = 50)
-    # refresh.grid(row = 0, column = 1)
+    refresh = ctk.CTkButton(top_frame, text = "Refresh", width = 50, height = 50, command = update_users)
+    refresh.grid(row = 0, column = 1)
 
     select_file_button = ctk.CTkButton(page, text = "Select File", command = open_file_dialog)
     select_file_button.pack()
@@ -136,8 +144,9 @@ def main_page(page):
     send_file_button = ctk.CTkButton(page, text = "Send File(s)", command = send_file)
     send_file_button.pack(pady = 20)
 
-    listener = threading.Thread(target = listen_for_files)
-    listener.start()
+    # global listener
+    # listener = threading.Thread(target = listen_for_files)
+    # listener.start()
 
 def login():
     #This block of code starts the server if the slider "Run Server?" is toggled on

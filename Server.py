@@ -8,6 +8,7 @@ class Server:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connected_users = {}
         self.keep_running = True
+        self.receiving_client = ""
 
     def start_server(self):
         #server = "192.168.0.95"
@@ -53,24 +54,28 @@ class Server:
                         self.connected_users[reply.lstrip("!")] = conn
                         print(reply.lstrip("!") + " connected")
                         
-                    if reply.find("@") > -1:
+                    elif reply.find("@") > -1:
                         del self.connected_users[reply.lstrip("@")]
                         print(reply.lstrip("@") + " disconnected")
                         conn.close()
                         break
                         #return OSError(10003, "User already exists...")
                     
-                    if reply.find("*") > -1:
+                    elif reply.find("*") > -1:
                         users = ""
                         for name in keys:
                             users += name + " "
                         conn.send(str.encode(users))
                         continue
 
-                    if reply.find("0") > -1 and reply.find("1") > -1:
-                        user_to_send = reply[:reply.find(" ")]
-                        print(reply.find(" "))
-                        self.connected_users[user_to_send].send(str.encode(reply.lstrip(user_to_send))) #type: ignore
+                    elif reply.find("^") > -1:
+                        self.receiving_client = reply.lstrip("^")
+                        self.connected_users[self.receiving_client].send(str.encode(str(conn) + " is sending you files"))
+                        conn.send(str.encode("Request sent"))
+                        continue
+
+                    elif reply.find("C:") > -1:
+                        self.connected_users[self.receiving_client].send(str.encode(reply))
                         conn.send(str.encode("Sent"))
                         continue
 
@@ -80,6 +85,7 @@ class Server:
                 conn.sendall(str.encode(reply))
 
             except:
+                print("An error happened in the server. Good luck with that.")
                 break
 
     def get_connected_users(self):
@@ -96,6 +102,7 @@ class Server:
             start_new_thread(self.threaded_client, (conn,))
 
 if __name__ == "__main__":
-    main_server = Server("192.168.0.95")
+    ip = input("What is the server ip? ")
+    main_server = Server(ip)
     main_server.start_server()
     main_server.run()
